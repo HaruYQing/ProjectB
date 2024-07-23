@@ -1,0 +1,29 @@
+.chat-container {
+  /* background-color: gray; */
+  border: 3px solid red;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-main {
+  /* background-color: black; */
+  border: 2px dotted blue;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.chat-header {
+  background-color: aquamarine;
+}
+.chat-messages {
+  background-color: lightgray;
+}
+.chat-messages > .msgList > li {
+  background-color: lavender;
+  list-style-type: none;
+}
+
+.chat-form-container {
+  background-color: plum;
+  flex: 1;
+}

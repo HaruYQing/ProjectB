@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet" href="/temp.css">
+  <link rel="stylesheet" href="/memberChat.css">
+  <title>會員專區(一般)</title>
+</head>
+
+<body>
+  <nav>我的導覽列</nav>
+  <div class="row">
+    <aside class="col-3">
+      <h1>會員專區</h1>
+      <ul>
+        <li><a href="/member/index/<%= uid %>">會員資料</a></li>
+        <li><a href="#">我的訂單</a></li>
+        <li><a href="#">按讚攤位</a></li>
+        <li><a href="/member/chat/<%= uid %>">聊天室</a></li>
+      </ul>
+    </aside>
+    <main class="col-9">
+      <!-- http://localhost:3200/member/chat/1 -->
+      <div>
+        <h1>聊天室</h1>
+      </div>
+
+
+
+      <div class="chat-container">
+
+        <div class="chat-main">
+
+          <div class="chat-header">
+            <h3 id="room-name">某個商家</h3>
+          </div>
+
+          <div class="chat-messages">
+            <ul class="msgList">
+              <li>
+                <span class="userName">我</span> 於 <span class="msgTime">10:43 am</span><br>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis, quibusdam?
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="chat-form-container">
+
+          <form id="chat-form" action="/member/chat/<%= uid %>" method="get">
+            <input id="msg" name="msg" type="text" placeholder="輸入訊息" required autocomplete="off" />
+            <button class="btn btn-secondary">送出</button>
+          </form>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+  <footer>我的footer</footer>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/chatClient.js"></script>
+</body>
+
+</html>

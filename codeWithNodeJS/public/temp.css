@@ -1,0 +1,69 @@
+nav {
+  background-color: pink;
+  height: 80px;
+}
+
+aside {
+  background-color: lightblue;
+}
+
+main {
+  background-color: white;
+}
+.profileContainer {
+  display: flex;
+  padding: 40px 60px;
+  flex-direction: column;
+  align-items: center;
+  gap: 70px;
+  align-self: stretch;
+}
+.memberProfile {
+  display: flex;
+  align-items: center;
+  gap: 74px;
+}
+.profileInput {
+  width: 380px;
+  height: 40px;
+  resize: none;
+  border-radius: 10px;
+  border: 2px solid black;
+}
+.profileName {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  align-self: stretch;
+}
+.memberIntro {
+  display: flex;
+  width: 625px;
+  padding: 0px 14px;
+  align-items: center;
+  gap: 74px;
+}
+.profileItems {
+  display: flex;
+  width: 625px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+.profilePW {
+  display: flex;
+  width: 625px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+.profileBtns {
+  display: flex;
+  align-items: center;
+  gap: 39px;
+}
+
+footer {
+  background-color: lightgoldenrodyellow;
+  height: 200px;
+}
