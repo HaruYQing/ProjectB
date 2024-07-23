@@ -129,6 +129,7 @@ app.post("/member/profile/:uid", async (req, res) => {
 
 app.get("/member/orderList/:uid", (req, res) => {
   conn.query(
+    // INSERT INTO orderlist (oid, uid, vid, detail, send_data, status) VALUES ("2407231568", 1, 2, "{pid: 1, amount: 1, total: 500, payment: 1}", "台中市南屯區公益路二段51號18樓", 1);
     "select * from orderList where uid = ?",
     [req.params.uid],
     (err, result) => {
@@ -140,6 +141,7 @@ app.get("/member/orderList/:uid", (req, res) => {
   );
 });
 
+// 聊天室頁面
 app.get("/member/chat/:uid", (req, res) => {
   conn.query(
     "select * from member where uid = ?",
