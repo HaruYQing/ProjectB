@@ -36,6 +36,11 @@
           <li>
             訂單編號: <%= order.oid %><br>
             商家名稱: <%= order.brand_name %><br>
+            商品名稱: <%= order.productData.name %><br>
+            商品圖片: <br>
+            商品數量: <%= order.detailObj.amount %><br>
+            商品金額: <%= order.detailObj.amount * order.detailObj.price %><br>
+            訂單總額: <%= order.detailObj.total %><br>
             訂單狀態: <%= order.statusText %><br>
             訂單日期: <%= order.formatted_order_time %><br>
           </li>

@@ -165,18 +165,45 @@ app.get("/member/orderList/:uid", async (req, res) => {
           return "未知狀態";
       }
     }
-    const formattedOrders = orders.map((order) => ({
-      ...order,
-      statusText: getStatusText(order.status),
-      formatted_order_time: new Date(order.order_time).toLocaleString("zh-TW", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-    }));
+    const formattedOrdersPromises = orders.map(async (order) => {
+      let detailObj;
+      try {
+        detailObj = JSON.parse(order.detail);
+      } catch (error) {
+        console.error(
+          "Error parsing JSON:",
+          error,
+          "Order detail:",
+          order.detail
+        );
+        detailObj = { amount: 0, price: 0, total: 0 }; // 設置一個默認值
+      }
+      // 抓商品資料
+      let productData = await queryAsync(
+        "SELECT * FROM product WHERE pid = ?",
+        [detailObj.pid]
+      );
+
+      return {
+        ...order,
+        detailObj: detailObj,
+        productData: productData[0],
+        statusText: getStatusText(order.status),
+        formatted_order_time: new Date(order.order_time).toLocaleString(
+          "zh-TW",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }
+        ),
+      };
+    });
+
+    const formattedOrders = await Promise.all(formattedOrdersPromises);
 
     res.render("memberOrderList.ejs", {
       uid: req.params.uid,
@@ -184,7 +211,7 @@ app.get("/member/orderList/:uid", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Fail to render your page" });
   }
 });
 
