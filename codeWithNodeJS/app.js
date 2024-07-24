@@ -59,6 +59,7 @@ app.use(bp.json());
 app.set("view engine", "ejs");
 
 const mysql = require("mysql");
+const { log } = require("console");
 const conn = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -128,17 +129,60 @@ app.post("/member/profile/:uid", async (req, res) => {
 });
 
 app.get("/member/orderList/:uid", (req, res) => {
-  conn.query(
-    // INSERT INTO orderlist (oid, uid, vid, detail, send_data, status) VALUES ("2407231568", 1, 2, "{pid: 1, amount: 1, total: 500, payment: 1}", "台中市南屯區公益路二段51號18樓", 1);
-    "select * from orderList where uid = ?",
-    [req.params.uid],
-    (err, result) => {
-      res.render("memberProfile.ejs", {
-        profile: result[0],
+  var query = `
+    SELECT o.*, vi.brand_name 
+    FROM orderList o 
+    JOIN vendor v ON o.vid = v.vid 
+    JOIN vendor_info vi ON v.vinfo = vi.vinfo 
+    WHERE o.uid = ?
+  `;
+
+  conn.query(query, [req.params.uid], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).render("error", { message: "內部伺服器錯誤" });
+    }
+
+    if (results.length === 0) {
+      return res.render("memberOrderList.ejs", {
+        orders: [],
         uid: req.params.uid,
       });
     }
-  );
+
+    // 處理結果
+    const processedResults = results.map((order) => {
+      // 這裡可以進行任何需要的數據處理
+      return {
+        ...order,
+        formattedDate: new Date(order.order_time).toLocaleDateString(),
+        // 可以添加更多處理邏輯
+      };
+    });
+
+    // console.log(processedResults);
+    /*
+      [
+        {
+          oid: '2407231568',
+          uid: 1,
+          vid: 2,
+          detail: '{"pid": 1, "amount": 1, "total": 500, "payment": 1}',
+          send_data: '台中市南屯區公益路二段51號18樓',
+          status: 1,
+          order_time: 2024-07-24T02:37:02.000Z,
+          pay: 1,
+          brand_name: '店家一號',
+          formattedDate: '2024/7/24'
+        }
+      ]
+    */
+
+    res.render("memberOrderList.ejs", {
+      orders: processedResults, // 陣列包物件
+      uid: req.params.uid,
+    });
+  });
 });
 
 // 聊天室頁面
