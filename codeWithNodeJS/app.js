@@ -128,61 +128,64 @@ app.post("/member/profile/:uid", async (req, res) => {
   }
 });
 
-app.get("/member/orderList/:uid", (req, res) => {
-  var query = `
-    SELECT o.*, vi.brand_name 
-    FROM orderList o 
-    JOIN vendor v ON o.vid = v.vid 
-    JOIN vendor_info vi ON v.vinfo = vi.vinfo 
-    WHERE o.uid = ?
-  `;
-
-  conn.query(query, [req.params.uid], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).render("error", { message: "內部伺服器錯誤" });
-    }
-
-    if (results.length === 0) {
-      return res.render("memberOrderList.ejs", {
-        orders: [],
-        uid: req.params.uid,
-      });
-    }
-
-    // 處理結果
-    const processedResults = results.map((order) => {
-      // 這裡可以進行任何需要的數據處理
-      return {
-        ...order,
-        formattedDate: new Date(order.order_time).toLocaleDateString(),
-        // 可以添加更多處理邏輯
-      };
-    });
-
-    // console.log(processedResults);
-    /*
-      [
-        {
-          oid: '2407231568',
-          uid: 1,
-          vid: 2,
-          detail: '{"pid": 1, "amount": 1, "total": 500, "payment": 1}',
-          send_data: '台中市南屯區公益路二段51號18樓',
-          status: 1,
-          order_time: 2024-07-24T02:37:02.000Z,
-          pay: 1,
-          brand_name: '店家一號',
-          formattedDate: '2024/7/24'
-        }
-      ]
-    */
-
-    res.render("memberOrderList.ejs", {
-      orders: processedResults, // 陣列包物件
-      uid: req.params.uid,
+function queryAsync(sql, values) {
+  return new Promise((resolve, reject) => {
+    conn.query(sql, values, (err, result) => {
+      if (err) reject(err);
+      else resolve(result);
     });
   });
+}
+
+app.get("/member/orderList/:uid", async (req, res) => {
+  try {
+    // 抓這個 uid 的訂單資料 => vid 找到 vendor table => vinfo 找到 vendor_info table
+    const orderQuery = `
+      SELECT o.*, vi.brand_name 
+      FROM orderList o 
+      JOIN vendor v ON o.vid = v.vid 
+      JOIN vendor_info vi ON v.vinfo = vi.vinfo 
+      WHERE o.uid = ?
+    `;
+    const orders = await queryAsync(orderQuery, [req.params.uid]);
+
+    // 將交易狀態轉為文字訊息、格式化日期
+    // todo: 把商品編號 pid 連結到 product table
+    function getStatusText(status) {
+      switch (status) {
+        case 0:
+          return "未出貨";
+        case 1:
+          return "已出貨";
+        case 2:
+          return "待收貨";
+        case 3:
+          return "已完成";
+        default:
+          return "未知狀態";
+      }
+    }
+    const formattedOrders = orders.map((order) => ({
+      ...order,
+      statusText: getStatusText(order.status),
+      formatted_order_time: new Date(order.order_time).toLocaleString("zh-TW", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+    }));
+
+    res.render("memberOrderList.ejs", {
+      uid: req.params.uid,
+      orders: formattedOrders,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // 聊天室頁面

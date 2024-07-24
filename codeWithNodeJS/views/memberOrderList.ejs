@@ -32,21 +32,16 @@
         <p>沒有訂單記錄</p>
         <% } else { %>
         <ul>
-          <% orders.forEach(function(order) { %>
+          <% orders.forEach(order => { %>
           <li>
             訂單編號: <%= order.oid %><br>
             商家名稱: <%= order.brand_name %><br>
-            訂單狀態: <%= order.status %><br>
-            訂單日期: <%= order.formattedDate %><br>
-            <!-- 顯示更多訂單詳情 -->
+            訂單狀態: <%= order.statusText %><br>
+            訂單日期: <%= order.formatted_order_time %><br>
           </li>
           <% }); %>
         </ul>
         <% } %>
-      </div>
-
-      <div>
-
       </div>
 
     </main>
