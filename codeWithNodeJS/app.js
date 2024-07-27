@@ -59,7 +59,7 @@ app.use(bp.json());
 app.set("view engine", "ejs");
 
 const mysql = require("mysql");
-const { log } = require("console");
+const { log, error } = require("console");
 const conn = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -81,10 +81,12 @@ app.get("/", (req, res) => {
   res.send("<h1>您即將進入會員專區～</h1>");
 });
 
+// 會員專區首頁 => 預設導到會員資料畫面
 app.get("/member/index/:uid", (req, res) => {
   res.redirect(`/member/profile/${req.params.uid}`);
 });
 
+// 會員資料
 app.get("/member/profile/:uid", (req, res) => {
   conn.query(
     "select * from member where uid = ?",
@@ -131,12 +133,18 @@ app.post("/member/profile/:uid", async (req, res) => {
 function queryAsync(sql, values) {
   return new Promise((resolve, reject) => {
     conn.query(sql, values, (err, result) => {
-      if (err) reject(err);
-      else resolve(result);
+      if (err) {
+        console.error("SQL Error: ", err);
+        reject(err);
+      } else {
+        console.log("SQL Result: ", result);
+        resolve(result);
+      }
     });
   });
 }
 
+// 我的訂單
 app.get("/member/orderList/:uid", async (req, res) => {
   try {
     // 抓這個 uid 的訂單資料 => vid 找到 vendor table => vinfo 找到 vendor_info table
@@ -184,10 +192,39 @@ app.get("/member/orderList/:uid", async (req, res) => {
         [detailObj.pid]
       );
 
+      // 假設 productData 中包含了名為 img01 的 Base64 圖片數據
+      let productImage = productData[0].img01;
+
+      // 檢查 productImage 的類型和內容
+      // console.log("Product Image Type:", typeof productImage);
+      // console.log("Product Image:", productImage);
+
+      // 根據 productImage 的實際類型進行處理
+      if (productImage) {
+        if (Buffer.isBuffer(productImage)) {
+          // 如果是 Buffer，轉換為 Base64
+          productImage = `data:image/jpeg;base64,${productImage.toString(
+            "base64"
+          )}`;
+        } else if (typeof productImage === "string") {
+          // 如果已經是字符串，檢查是否需要添加前綴
+          if (!productImage.startsWith("data:image/")) {
+            productImage = `data:image/jpeg;base64,${productImage}`;
+          }
+        } else {
+          // 如果是其他類型，設置為 null
+          console.log("Unexpected image data type");
+          productImage = null;
+        }
+      } else {
+        productImage = null;
+      }
+
       return {
         ...order,
         detailObj: detailObj,
         productData: productData[0],
+        productImage: productImage,
         statusText: getStatusText(order.status),
         formatted_order_time: new Date(order.order_time).toLocaleString(
           "zh-TW",
@@ -212,6 +249,72 @@ app.get("/member/orderList/:uid", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Fail to render your page" });
+  }
+});
+
+// 按讚攤位
+app.get("/member/like/:uid", async (req, res) => {
+  try {
+    const heartQuery = `
+        SELECT * FROM heart WHERE uid = ?
+    `;
+    const likes = await queryAsync(heartQuery, [req.params.uid]);
+    console.log(`likes: ${likes}`);
+
+    if (likes.length === 0 || !likes[0].list) {
+      return res.send([]); // 如果沒有找到該會員或沒有喜歡的項目，返回空數列
+    }
+
+    const likesNumArr = likes[0]["list"].split(",").map(Number); // [1,2]
+    console.log(`likesNumArr: ${likesNumArr}`);
+
+    // to-do: 抓 logo圖片、抓視覺圖(需要篩選，不一定有 5 張)
+    const likesQuery = `
+    SELECT v.vid, vi.brand_name 
+    FROM vendor v 
+    JOIN vendor_info vi ON v.vinfo = vi.vinfo 
+    WHERE v.vid = ?
+  `;
+
+    const likedBrandPromises = likesNumArr.map(async (value) => {
+      // console.log(`vid: ${typeof value}---${value}`);
+      try {
+        const result = await queryAsync(likesQuery, [value]);
+        // console.log(`Query result for vid ${value}:`, result);
+        return result;
+      } catch (error) {
+        console.error(`Error querying for vid ${value}:`, error);
+        return null;
+      }
+    });
+
+    const likedBrandResult = await Promise.all(likedBrandPromises);
+    // console.log("Final liked brand results:", likedBrandResult);
+
+    // 處理結果，假設每個查詢返回一個數組，我們取第一個元素
+    const likedBrandArr = likedBrandResult
+      .map((result) => result[0])
+      .filter(Boolean);
+    /* 
+        [
+          {
+            "vid": 1,
+            "brand_name": "店家二號"
+          },
+          {
+            "vid": 2,
+            "brand_name": "店家一號"
+          }
+        ]
+      */
+
+    res.render("memberLike.ejs", {
+      likedList: likedBrandArr,
+      uid: req.params.uid,
+    });
+  } catch (error) {
+    console.error("Error in /member/like/:uid:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
