@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <link rel="stylesheet" href="/temp.css">
-  <title>會員資料(一般)</title>
+  <title>會員專區(攤主)</title>
 </head>
 
 <body>
@@ -18,23 +18,31 @@
     <aside class="col-3">
       <h1>會員專區</h1>
       <ul>
-        <li><a href="/member/index/<%= uid %>">會員資料</a></li>
-        <li><a href="/member/orderList/<%= uid %>">我的訂單</a></li>
-        <li><a href="/member/like/<%= uid %>">按讚攤位</a></li>
-        <li><a href="/member/chat/<%= uid %>">聊天室</a></li>
+        <li><a href="/vendor/profile/<%= vid %>">會員資料</a></li>
+        <li><a href="#">我要擺攤</a></li>
+        <li>
+          <a href="#">攤位管理</a>
+          <ul>
+            <li><a href="/vendor/info/<%= vid %>">攤位資訊</a></li>
+            <li><a href="#">交易設定</a></li>
+            <li><a href="#">商品管理</a></li>
+          </ul>
+        </li>
+        <li><a href="#">訂單管理</a></li>
+        <li><a href="#">聊天室</a></li>
       </ul>
     </aside>
     <main class="col-9">
-      <!-- http://localhost:3200/member/index/3 -->
+      <!-- http://localhost:3200/vendor/info/1 -->
       <div>
-        <h2>會員資料</h2>
+        <h2>攤位資訊</h2>
       </div>
 
       <div>
-        <form action="/member/profile/<%= uid %>" method="post">
+        <form action="/vendor/profile/<%= vid %>" method="post">
 
           <div class="profileContainer">
-            <input type="hidden" value="<%= uid %>">
+            <input type="hidden" value="<%= vid %>">
 
             <div class="memberProfile memberIntro">
               <span>一般會員</span>
@@ -56,19 +64,6 @@
               <div class="memberProfile">
                 <span>會員帳號</span>
                 <span><%= profile.account %></span>
-              </div>
-
-              <div class="memberProfile">
-                <span>會員姓名</span>
-                <div id="userName">
-                  <input type="text" name="first_name" class="profileInput2" placeholder="<%= profile.first_name %>">
-                  <input type="text" name="last_name" class="profileInput3" placeholder="<%= profile.last_name %>">
-                </div>
-              </div>
-
-              <div class="memberProfile">
-                <span>會員暱稱</span>
-                <input type="text" name="nickname" class="profileInput" placeholder="<%= profile.nickname %>">
               </div>
 
               <div class="memberProfile">

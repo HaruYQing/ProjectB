@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <link rel="stylesheet" href="/temp.css">
-  <title>會員專區(攤主)</title>
+  <title>會員資料(攤主)</title>
 </head>
 
 <body>
@@ -20,7 +20,14 @@
       <ul>
         <li><a href="/vendor/profile/<%= vid %>">會員資料</a></li>
         <li><a href="#">我要擺攤</a></li>
-        <li><a href="#">攤位管理</a></li>
+        <li>
+          <a href="#">攤位管理</a>
+          <ul>
+            <li><a href="/vendor/info/<%= vid %>">攤位資訊</a></li>
+            <li><a href="#">交易設定</a></li>
+            <li><a href="#">商品管理</a></li>
+          </ul>
+        </li>
         <li><a href="#">訂單管理</a></li>
         <li><a href="#">聊天室</a></li>
       </ul>
@@ -41,7 +48,7 @@
               <span>一般會員</span>
               <div class="profileName">
                 <h2><%= profile.first_name + " " + profile.last_name %></h2>
-                <i class="bi bi-pencil-fill" style="color: black;"></i>
+                <!-- <i class="bi bi-pencil-fill" style="color: black;"></i> -->
               </div>
             </div>
 
@@ -57,6 +64,14 @@
               <div class="memberProfile">
                 <span>會員帳號</span>
                 <span><%= profile.account %></span>
+              </div>
+
+              <div class="memberProfile">
+                <span>會員姓名</span>
+                <div id="userName">
+                  <input type="text" name="first_name" class="profileInput2" placeholder="<%= profile.first_name %>">
+                  <input type="text" name="last_name" class="profileInput3" placeholder="<%= profile.last_name %>">
+                </div>
               </div>
 
               <div class="memberProfile">

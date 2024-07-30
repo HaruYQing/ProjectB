@@ -23,8 +23,27 @@ main {
   align-items: center;
   gap: 74px;
 }
+#userName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .profileInput {
   width: 380px;
+  height: 40px;
+  resize: none;
+  border-radius: 10px;
+  border: 2px solid black;
+}
+.profileInput2 {
+  width: 138px;
+  height: 40px;
+  resize: none;
+  border-radius: 10px;
+  border: 2px solid black;
+}
+.profileInput3 {
+  width: 230px;
   height: 40px;
   resize: none;
   border-radius: 10px;

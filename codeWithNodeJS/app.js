@@ -82,12 +82,15 @@ app.get("/member/profile/:uid", (req, res) => {
 // 編輯會員資料
 app.post("/member/profile/:uid", async (req, res) => {
   try {
-    const conn = req.app.get("mysqlConnection");
-    const { nickname, phone, email, address, password } = req.body;
+    // const conn = req.app.get("mysqlConnection");
+    const { first_name, last_name, nickname, phone, email, address, password } =
+      req.body;
     const uid = req.params.uid;
 
     // 有被填寫的欄位才會傳入 value
     let updateFields = {};
+    if (first_name) updateFields.first_name = first_name;
+    if (last_name) updateFields.last_name = last_name;
     if (nickname) updateFields.nickname = nickname;
     if (phone) updateFields.phone = phone;
     if (email) updateFields.email = email;
@@ -232,7 +235,10 @@ app.get("/member/like/:uid", async (req, res) => {
     // console.log(`likes: ${JSON.stringify(likes)}`);
 
     if (likes.length === 0 || !likes[0].list) {
-      return res.send("There is no liked brand.");
+      return res.render("memberLike.ejs", {
+        uid: req.params.uid,
+        likes: likes,
+      });
     }
 
     const likesNumArr = likes[0]["list"].split(",").map(Number);
@@ -279,6 +285,7 @@ app.get("/member/like/:uid", async (req, res) => {
     res.render("memberLike.ejs", {
       likedList: likedBrandArr,
       uid: req.params.uid,
+      likes: likes,
     });
   } catch (error) {
     console.error("Error in /member/like/:uid:", error);

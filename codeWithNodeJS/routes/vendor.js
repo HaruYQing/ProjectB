@@ -24,12 +24,14 @@ router.get("/profile/:vid", (req, res) => {
 // 編輯會員資料
 router.post("/profile/:vid", async (req, res) => {
   try {
-    const { phone, email, address, password } = req.body;
+    const { first_name, last_name, phone, email, address, password } = req.body;
     const vid = req.params.vid;
     const conn = req.app.get("mysqlConnection");
 
     // 有被填寫的欄位才會傳入 value
     let updateFields = {};
+    if (first_name) updateFields.first_name = first_name;
+    if (last_name) updateFields.last_name = last_name;
     if (phone) updateFields.phone = phone;
     if (email) updateFields.email = email;
     if (address) updateFields.address = address;
@@ -50,6 +52,13 @@ router.post("/profile/:vid", async (req, res) => {
     console.error("Error updating profile:", error);
     res.status(500).send("An error occurred while updating the profile");
   }
+});
+
+// 我要擺攤
+
+// 攤位資訊
+router.get("/info/:vid", (req, res) => {
+  res.send("<h1>shop info here</h1>");
 });
 
 module.exports = router;
