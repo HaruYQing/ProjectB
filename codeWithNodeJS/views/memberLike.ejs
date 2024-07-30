@@ -24,18 +24,39 @@
         <li><a href="/member/chat/<%= uid %>">聊天室</a></li>
       </ul>
     </aside>
+    <!-- http://localhost:3200/member/like/1 -->
     <main class="col-9">
-      <!-- http://localhost:3200/member/like/1 -->
       <ul>
         <% likedList.forEach(brand => { %>
         <li>
-          商家名稱：<%= brand.brand_name %>
-
+          商家名稱：<%= brand.brand_name %> <br />
+          商家LOGO：
+          <% if (brand.logo_img) { %>
+          <img src="data:image/jpeg;base64,<%= brand.logo_img %>" alt="<%= brand.brand_name %> Logo" style="max-width: 100px;">
+          <% } else { %>
+          無LOGO
+          <% } %> <br />
+          商家視覺照1：
+          <% if (brand.brand_img01) { %>
+          <img src="data:image/jpeg;base64,<%= brand.brand_img01 %>" alt="<%= brand.brand_name %> Image 1" style="max-width: 100px;">
+          <% } else { %>
+          無圖片
+          <% } %>
+          商家視覺照2：
+          <% if (brand.brand_img02) { %>
+          <img src="data:image/jpeg;base64,<%= brand.brand_img02 %>" alt="<%= brand.brand_name %> Image 2" style="max-width: 100px;">
+          <% } else { %>
+          無圖片
+          <% } %>
+          商家視覺照3：
+          <% if (brand.brand_img03) { %>
+          <img src="data:image/jpeg;base64,<%= brand.brand_img03 %>" alt="<%= brand.brand_name %> Image 3" style="max-width: 100px;">
+          <% } else { %>
+          無圖片
+          <% } %>
         </li>
         <% }) %>
-
       </ul>
-
     </main>
   </div>
   <footer>我的footer</footer>

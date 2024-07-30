@@ -207,7 +207,7 @@ app.get("/member/orderList/:uid", async (req, res) => {
             "base64"
           )}`;
         } else if (typeof productImage === "string") {
-          // 如果已經是字符串，檢查是否需要添加前綴
+          // 如果已經是字串，檢查是否需要添加前綴
           if (!productImage.startsWith("data:image/")) {
             productImage = `data:image/jpeg;base64,${productImage}`;
           }
@@ -259,28 +259,25 @@ app.get("/member/like/:uid", async (req, res) => {
         SELECT * FROM heart WHERE uid = ?
     `;
     const likes = await queryAsync(heartQuery, [req.params.uid]);
-    console.log(`likes: ${likes}`);
+    console.log(`likes: ${JSON.stringify(likes)}`);
 
     if (likes.length === 0 || !likes[0].list) {
-      return res.send([]); // 如果沒有找到該會員或沒有喜歡的項目，返回空數列
+      return res.send("There is no liked brand.");
     }
 
-    const likesNumArr = likes[0]["list"].split(",").map(Number); // [1,2]
-    console.log(`likesNumArr: ${likesNumArr}`);
+    const likesNumArr = likes[0]["list"].split(",").map(Number);
+    console.log(`likesNumArr: ${likesNumArr}`); // 1,2
 
-    // to-do: 抓 logo圖片、抓視覺圖(需要篩選，不一定有 5 張)
     const likesQuery = `
-    SELECT v.vid, vi.brand_name 
+    SELECT v.vid, vi.brand_name, vi.logo_img, vi.brand_img01, vi.brand_img02, vi.brand_img03 
     FROM vendor v 
     JOIN vendor_info vi ON v.vinfo = vi.vinfo 
     WHERE v.vid = ?
   `;
 
     const likedBrandPromises = likesNumArr.map(async (value) => {
-      // console.log(`vid: ${typeof value}---${value}`);
       try {
         const result = await queryAsync(likesQuery, [value]);
-        // console.log(`Query result for vid ${value}:`, result);
         return result;
       } catch (error) {
         console.error(`Error querying for vid ${value}:`, error);
@@ -289,24 +286,25 @@ app.get("/member/like/:uid", async (req, res) => {
     });
 
     const likedBrandResult = await Promise.all(likedBrandPromises);
-    // console.log("Final liked brand results:", likedBrandResult);
 
-    // 處理結果，假設每個查詢返回一個數組，我們取第一個元素
-    const likedBrandArr = likedBrandResult
+    let likedBrandArr = likedBrandResult
       .map((result) => result[0])
       .filter(Boolean);
-    /* 
-        [
-          {
-            "vid": 1,
-            "brand_name": "店家二號"
-          },
-          {
-            "vid": 2,
-            "brand_name": "店家一號"
-          }
-        ]
-      */
+    likedBrandArr = likedBrandArr.map((brand) => {
+      return {
+        ...brand,
+        logo_img: brand.logo_img ? brand.logo_img.toString("base64") : null,
+        brand_img01: brand.brand_img01
+          ? brand.brand_img01.toString("base64")
+          : null,
+        brand_img02: brand.brand_img02
+          ? brand.brand_img02.toString("base64")
+          : null,
+        brand_img03: brand.brand_img03
+          ? brand.brand_img03.toString("base64")
+          : null,
+      };
+    });
 
     res.render("memberLike.ejs", {
       likedList: likedBrandArr,
