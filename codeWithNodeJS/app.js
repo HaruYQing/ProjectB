@@ -4,6 +4,32 @@ const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 app.use(express.static("public"));
 
+const bp = require("body-parser");
+app.use(bp.urlencoded({ extened: true }));
+app.use(bp.json());
+
+app.set("view engine", "ejs");
+
+const mysql = require("mysql");
+const conn = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "haoshih_test",
+});
+
+app.set("mysqlConnection", conn);
+const { queryAsync } = require("./utils/utils");
+
+conn.connect((err) => {
+  if (err) {
+    console.log("MySQL連線失敗");
+    return;
+  } else {
+    console.log("MySQL連線成功");
+  }
+});
+
 // 引用密碼雜湊加密模組
 const bcrypt = require("bcrypt");
 // 密碼雜湊加密函式
@@ -52,30 +78,6 @@ async function updateUserProfile(uid, profileData) {
   });
 }
 
-const bp = require("body-parser");
-app.use(bp.urlencoded({ extened: true }));
-app.use(bp.json());
-
-app.set("view engine", "ejs");
-
-const mysql = require("mysql");
-const { log, error } = require("console");
-const conn = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "haoshih_test",
-});
-
-conn.connect((err) => {
-  if (err) {
-    console.log("MySQL連線失敗");
-    return;
-  } else {
-    console.log("MySQL連線成功");
-  }
-});
-
 app.get("/", (req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send("<h1>您即將進入會員專區～</h1>");
@@ -88,6 +90,7 @@ app.get("/member/index/:uid", (req, res) => {
 
 // 會員資料
 app.get("/member/profile/:uid", (req, res) => {
+  const conn = req.app.get("mysqlConnection");
   conn.query(
     "select * from member where uid = ?",
     [req.params.uid],
@@ -99,9 +102,10 @@ app.get("/member/profile/:uid", (req, res) => {
     }
   );
 });
-
+// 編輯會員資料
 app.post("/member/profile/:uid", async (req, res) => {
   try {
+    const conn = req.app.get("mysqlConnection");
     const { nickname, phone, email, address, password } = req.body;
     const uid = req.params.uid;
 
@@ -130,23 +134,24 @@ app.post("/member/profile/:uid", async (req, res) => {
   }
 });
 
-function queryAsync(sql, values) {
-  return new Promise((resolve, reject) => {
-    conn.query(sql, values, (err, result) => {
-      if (err) {
-        console.error("SQL Error: ", err);
-        reject(err);
-      } else {
-        console.log("SQL Result: ", result);
-        resolve(result);
-      }
-    });
-  });
-}
+// function queryAsync(sql, values) {
+//   return new Promise((resolve, reject) => {
+//     conn.query(sql, values, (err, result) => {
+//       if (err) {
+//         console.error("SQL Error: ", err);
+//         reject(err);
+//       } else {
+//         // console.log("SQL Result: ", result);
+//         resolve(result);
+//       }
+//     });
+//   });
+// }
 
 // 我的訂單
 app.get("/member/orderList/:uid", async (req, res) => {
   try {
+    const conn = req.app.get("mysqlConnection");
     // 抓這個 uid 的訂單資料 => vid 找到 vendor table => vinfo 找到 vendor_info table
     const orderQuery = `
       SELECT o.*, vi.brand_name 
@@ -155,7 +160,7 @@ app.get("/member/orderList/:uid", async (req, res) => {
       JOIN vendor_info vi ON v.vinfo = vi.vinfo 
       WHERE o.uid = ?
     `;
-    const orders = await queryAsync(orderQuery, [req.params.uid]);
+    const orders = await queryAsync(conn, orderQuery, [req.params.uid]);
 
     // 將交易狀態轉為文字訊息、格式化日期
     // todo: 把商品編號 pid 連結到 product table
@@ -188,6 +193,7 @@ app.get("/member/orderList/:uid", async (req, res) => {
       }
       // 抓商品資料
       let productData = await queryAsync(
+        conn,
         "SELECT * FROM product WHERE pid = ?",
         [detailObj.pid]
       );
@@ -255,18 +261,19 @@ app.get("/member/orderList/:uid", async (req, res) => {
 // 按讚攤位
 app.get("/member/like/:uid", async (req, res) => {
   try {
+    const conn = req.app.get("mysqlConnection");
     const heartQuery = `
         SELECT * FROM heart WHERE uid = ?
     `;
-    const likes = await queryAsync(heartQuery, [req.params.uid]);
-    console.log(`likes: ${JSON.stringify(likes)}`);
+    const likes = await queryAsync(conn, heartQuery, [req.params.uid]);
+    // console.log(`likes: ${JSON.stringify(likes)}`);
 
     if (likes.length === 0 || !likes[0].list) {
       return res.send("There is no liked brand.");
     }
 
     const likesNumArr = likes[0]["list"].split(",").map(Number);
-    console.log(`likesNumArr: ${likesNumArr}`); // 1,2
+    // console.log(`likesNumArr: ${likesNumArr}`); // 1,2
 
     const likesQuery = `
     SELECT v.vid, vi.brand_name, vi.logo_img, vi.brand_img01, vi.brand_img02, vi.brand_img03 
@@ -277,7 +284,7 @@ app.get("/member/like/:uid", async (req, res) => {
 
     const likedBrandPromises = likesNumArr.map(async (value) => {
       try {
-        const result = await queryAsync(likesQuery, [value]);
+        const result = await queryAsync(conn, likesQuery, [value]);
         return result;
       } catch (error) {
         console.error(`Error querying for vid ${value}:`, error);
@@ -343,6 +350,9 @@ io.on("connection", (socket) => {
     io.emit("用戶斷開連接");
   });
 });
+
+const vendorRoutes = require("./routes/vendor");
+app.use("/vendor", vendorRoutes);
 
 app.use((req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
