@@ -17,9 +17,9 @@ const conn = mysql.createConnection({
   password: "",
   database: "haoshih_test",
 });
-
 app.set("mysqlConnection", conn);
-const { queryAsync } = require("./utils/utils");
+
+const { queryAsync, hashPW } = require("./utils/utils");
 
 conn.connect((err) => {
   if (err) {
@@ -30,32 +30,9 @@ conn.connect((err) => {
   }
 });
 
-// 引用密碼雜湊加密模組
-const bcrypt = require("bcrypt");
-// 密碼雜湊加密函式
-async function hashPW(originalPW) {
-  const saltRounds = 10;
-  try {
-    const hash = await bcrypt.hash(originalPW, saltRounds);
-    return hash;
-  } catch (error) {
-    console.error("Error hashing password:", error);
-    throw error;
-  }
-}
-// 雜湊密碼驗證函式
-async function verifyPW(originalPW, hashedPW) {
-  try {
-    const isMatch = await bcrypt.compare(originalPW, hashedPW);
-    return isMatch;
-  } catch (error) {
-    console.error("Error verifying password:", error);
-  }
-}
-// 資料庫更新函式
+// 資料庫更新函式 (一般會員)
 async function updateUserProfile(uid, profileData) {
   return new Promise((resolve, reject) => {
-    const { nickname, phone, email, address, password } = profileData;
     const keys = Object.keys(profileData);
     // 如果都沒填寫，就不執行動作
     if (keys.length === 0) {
@@ -117,7 +94,7 @@ app.post("/member/profile/:uid", async (req, res) => {
     if (address) updateFields.address = address;
     // 有被填寫的密碼才會被雜湊加密並傳入
     if (password) {
-      hashedPW = await hashPW(password);
+      var hashedPW = await hashPW(password);
       updateFields.password = hashedPW;
     }
 
@@ -133,20 +110,6 @@ app.post("/member/profile/:uid", async (req, res) => {
     res.status(500).send("An error occurred while updating the profile");
   }
 });
-
-// function queryAsync(sql, values) {
-//   return new Promise((resolve, reject) => {
-//     conn.query(sql, values, (err, result) => {
-//       if (err) {
-//         console.error("SQL Error: ", err);
-//         reject(err);
-//       } else {
-//         // console.log("SQL Result: ", result);
-//         resolve(result);
-//       }
-//     });
-//   });
-// }
 
 // 我的訂單
 app.get("/member/orderList/:uid", async (req, res) => {
@@ -351,6 +314,7 @@ io.on("connection", (socket) => {
   });
 });
 
+// 攤主相關 router
 const vendorRoutes = require("./routes/vendor");
 app.use("/vendor", vendorRoutes);
 
