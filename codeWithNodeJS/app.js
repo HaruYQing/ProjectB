@@ -79,6 +79,17 @@ app.get("/member/profile/:uid", (req, res) => {
     }
   );
 });
+// 會員資料 API
+app.get("/api/member/profile/:uid", (req, res) => {
+  const conn = req.app.get("mysqlConnection");
+  conn.query(
+    "select * from member where uid = ?",
+    [req.params.uid],
+    (err, result) => {
+      res.json(result[0]);
+    }
+  );
+});
 // 編輯會員資料
 app.post("/member/profile/:uid", async (req, res) => {
   try {
