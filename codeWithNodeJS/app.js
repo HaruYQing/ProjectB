@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const cors = require("cors");
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 app.use(express.static("public"));
@@ -7,6 +8,7 @@ app.use(express.static("public"));
 const bp = require("body-parser");
 app.use(bp.urlencoded({ extened: true }));
 app.use(bp.json());
+app.use(cors());
 
 app.set("view engine", "ejs");
 
@@ -81,17 +83,60 @@ app.get("/member/profile/:uid", (req, res) => {
 });
 // 會員資料 API
 app.get("/api/member/profile/:uid", (req, res) => {
+  // console.log(`Received request for user ID: ${req.params.uid}`); // 添加這行日誌
   const conn = req.app.get("mysqlConnection");
   conn.query(
     "select * from member where uid = ?",
     [req.params.uid],
     (err, result) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+      if (result.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      // console.log("Query result:", result[0]); // 添加這行日誌
       res.json(result[0]);
     }
   );
 });
-// 編輯會員資料
-app.post("/member/profile/:uid", async (req, res) => {
+// 編輯會員資料 (for ejs)
+app.put("/member/profile/:uid", async (req, res) => {
+  try {
+    // const conn = req.app.get("mysqlConnection");
+    const { first_name, last_name, nickname, phone, email, address, password } =
+      req.body;
+    const uid = req.params.uid;
+
+    // 有被填寫的欄位才會傳入 value
+    let updateFields = {};
+    if (first_name) updateFields.first_name = first_name;
+    if (last_name) updateFields.last_name = last_name;
+    if (nickname) updateFields.nickname = nickname;
+    if (phone) updateFields.phone = phone;
+    if (email) updateFields.email = email;
+    if (address) updateFields.address = address;
+    // 有被填寫的密碼才會被雜湊加密並傳入
+    if (password) {
+      var hashedPW = await hashPW(password);
+      updateFields.password = hashedPW;
+    }
+
+    // 假如有欄位被填寫才會 update到資料庫，否則就是回到原畫面
+    if (Object.keys(updateFields > 0)) {
+      await updateUserProfile(uid, updateFields);
+      res.redirect(`/member/profile/${req.params.uid}`);
+    } else {
+      res.redirect(`/member/profile/${req.params.uid}`);
+    }
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).send("An error occurred while updating the profile");
+  }
+});
+// 編輯會員資料 --React--
+app.put("/put/member/profile/:uid", async (req, res) => {
   try {
     // const conn = req.app.get("mysqlConnection");
     const { first_name, last_name, nickname, phone, email, address, password } =
@@ -506,12 +551,17 @@ io.on("connection", (socket) => {
 const vendorRoutes = require("./routes/vendor");
 app.use("/vendor", vendorRoutes);
 
-app.use((req, res) => {
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.send("<h1>網站維護中...</h1>");
-});
+// app.use((req, res) => {
+//   res.setHeader("Content-Type", "text/html; charset=utf-8");
+//   res.send("<h1>網站維護中...</h1>");
+// });
 
 const PORT = 3200 || process.env.PORT;
 http.listen(PORT, () => {
   console.log(`服務器運行在 ${PORT} 端口`);
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
 });

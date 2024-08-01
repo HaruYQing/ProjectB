@@ -1,0 +1,66 @@
+1. 確保 server端 app.js 中 app.get( "url", (req, res) => {} ) 
+   最後用 res.json 傳遞出 json 格式的資料 
+   [ res.send 沒有不行，但強烈建議用 res.json，他會清楚定義 application/json ]
+
+2. 在 server端安裝 CORS ( npm install cors )
+
+3. 在 server端引用 CORS
+	 const cors = require("cors");
+	 app.use(cors()); // 注意 cors 要加小括弧
+
+4. 到 client端 ( haoshih ) 的檔案中 ( 這邊以 MemberIndexNormal.jsx 為例 )，
+   引入 useEffect 以及 axios (需先安裝)
+	 import { useState, useEffect } from "react";
+	 import axios from 'axios';
+
+5. 到這個 component 的 function 裡面，加上以下程式碼
+
+  // 這邊 memberData, setMemberData 改成自己需要的名稱
+  const [memberData, setMemberData] = useState(null);
+
+  useEffect(() => {
+    // 這邊 fetchMemberData 改成自己好辨認的名稱
+    const fetchMemberData = async () => {
+      try {
+        // 底下的 URL 改成自己在 server端 app.get 設定的 URL 
+        const response = await axios.get(
+          "http://localhost:3200/api/member/profile/2"
+        );
+        setMemberData(response.data);
+        // 檢查用：數據首次被獲取時顯示
+        console.log("Member Data:", response.data);
+      } catch (error) {
+        console.error("Error fetching member data:", error);
+      }
+    };
+
+    fetchMemberData();
+  }, []); // 空陣列表示這個效果只在 component 首次渲染時執行
+
+6. 啟動 server端 和 client端，確認 console 是否成功顯示
+
+7. 成功後，到 component 中使用時，可以考慮加一個錯誤處理機制
+	 // 以下僅為簡易示範若資料沒有成功傳入，做其他處理
+	 {memberData ? <MemberForm profile={memberData} /> : <p>Loading...</p>}
+
+========================================
+
+讓API的資料依使用者改變 ( 這邊以 MemberIndexNormal.jsx 為例 )
+
+8. 到 client端 ( haoshih ) 的 layout，將 path 改為底下這樣
+	 <Route path="/member/:uid" element={<MemberIndexNormal />} />
+
+9. 到 MemberIndexNormal.jsx 中，引入 useParams
+	 import { useParams } from 'react-router-dom';
+
+10. 到這個 component 的 function 裡面，加上以下程式碼
+	 const { uid } = useParams();
+
+11. 修改 useEffect 的 API URL
+        const response = await axios.get(
+          `http://localhost:3200/api/member/profile/${uid}`
+        );
+
+完成!!
+
+
