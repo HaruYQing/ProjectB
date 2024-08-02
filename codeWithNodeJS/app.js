@@ -158,11 +158,14 @@ app.put("/put/member/profile/:uid", async (req, res) => {
     }
 
     // 假如有欄位被填寫才會 update到資料庫，否則就是回到原畫面
-    if (Object.keys(updateFields > 0)) {
+    if (Object.keys(updateFields).length > 0) {
       await updateUserProfile(uid, updateFields);
-      res.redirect(`/member/profile/${req.params.uid}`);
+      res.status(200).json({
+        message: "Profile updated successfully",
+        updatedFields: Object.keys(updateFields),
+      });
     } else {
-      res.redirect(`/member/profile/${req.params.uid}`);
+      res.status(200).json({ message: "No fields to update" });
     }
   } catch (error) {
     console.error("Error updating profile:", error);
