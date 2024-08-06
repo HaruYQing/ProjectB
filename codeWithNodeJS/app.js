@@ -363,11 +363,6 @@ io.on("connection", (socket) => {
 const vendorRoutes = require("./routes/vendor");
 app.use("/vendor", vendorRoutes);
 
-// app.use((req, res) => {
-//   res.setHeader("Content-Type", "text/html; charset=utf-8");
-//   res.send("<h1>網站維護中...</h1>");
-// });
-
 const PORT = 3200 || process.env.PORT;
 http.listen(PORT, () => {
   console.log(`服務器運行在 ${PORT} 端口`);
